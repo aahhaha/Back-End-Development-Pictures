@@ -35,7 +35,7 @@ def count():
 ######################################################################
 @app.route("/picture", methods=["GET"])
 def get_pictures():
-    pass
+    return jsonify(data), 200
 
 ######################################################################
 # GET A PICTURE
@@ -44,7 +44,10 @@ def get_pictures():
 
 @app.route("/picture/<int:id>", methods=["GET"])
 def get_picture_by_id(id):
-    pass
+    picture = next((item for item in data if item['id'] == id), None)
+    if picture is None:
+        abort(404)
+    return jsonify(picture), 200
 
 
 ######################################################################
@@ -52,7 +55,13 @@ def get_picture_by_id(id):
 ######################################################################
 @app.route("/picture", methods=["POST"])
 def create_picture():
-    pass
+    picture = request.get_json()
+    if not isinstance(picture, dict) or not isinstance(picture.get('id'), int):
+        abort(400)
+    if any(item['id'] == picture['id'] for item in data):
+        return jsonify(Message=f"picture with id {picture['id']} already present"), 302
+    data.append(picture)
+    return jsonify(picture), 201
 
 ######################################################################
 # UPDATE A PICTURE
@@ -61,11 +70,22 @@ def create_picture():
 
 @app.route("/picture/<int:id>", methods=["PUT"])
 def update_picture(id):
-    pass
+    picture = next((item for item in data if item['id'] == id), None)
+    if picture is None:
+        abort(404)
+    updates = request.get_json()
+    if not isinstance(updates, dict) or updates.get('id', id) != id:
+        abort(400)
+    picture.update(updates)
+    return jsonify(picture), 200
 
 ######################################################################
 # DELETE A PICTURE
 ######################################################################
 @app.route("/picture/<int:id>", methods=["DELETE"])
 def delete_picture(id):
-    pass
+    picture = next((item for item in data if item['id'] == id), None)
+    if picture is None:
+        abort(404)
+    data.remove(picture)
+    return '', 204
